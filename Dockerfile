@@ -1,0 +1,24 @@
+FROM python:slim-bullseye
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+ARG UA_VERSION=1.5.33
+RUN curl -fsSL "https://dnanexus-sdk.s3.amazonaws.com/dnanexus-upload-agent-${UA_VERSION}-linux.tar.gz" -o /tmp/ua.tar.gz \
+  && tar -xzf /tmp/ua.tar.gz -C /tmp \
+  && mv "/tmp/dnanexus-upload-agent-${UA_VERSION}-linux/ua" /usr/local/bin/ua \
+  && chmod +x /usr/local/bin/ua \
+  && rm -rf "/tmp/dnanexus-upload-agent-${UA_VERSION}-linux" /tmp/ua.tar.gz \
+  && apt-get remove -y curl \
+  && apt-get autoremove -y \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY wrapper.py /usr/local/bin/wrapper.py
+RUN chmod +x /usr/local/bin/wrapper.py
+
+WORKDIR /usr/local/bin
+
+LABEL org.nrg.commands="[{\"name\":\"xnat-dnax-uploader\",\"label\":\"XNAT to DNAnexus Uploader\",\"description\":\"Uploads Radiomics CSV from a session's resource folder to a DNAnexus project. Writes a per-run CSV manifest to the source project's xnat-to-dnax-transfer-log resource.\",\"version\":\"1.0.0\",\"schema-version\":\"1.0\",\"image\":\"radiologicsremya/xnat-dnax-uploader:1.0.0\",\"type\":\"docker\",\"command-line\":\"python3 /usr/local/bin/wrapper.py --dest-project #DEST_PROJECT#\",\"override-entrypoint\":true,\"mounts\":[{\"name\":\"in\",\"writable\":false,\"path\":\"/input\"},{\"name\":\"out\",\"writable\":true,\"path\":\"/output\"}],\"environment-variables\":{\"SUBJECT_LABEL\":\"#SUBJECT_LABEL#\",\"SESSION_LABEL\":\"#SESSION_LABEL#\"},\"ports\":{},\"inputs\":[{\"name\":\"dest-project\",\"description\":\"DNAnexus destination project ID (e.g. project-XXXXXXXX)\",\"type\":\"string\",\"required\":true,\"replacement-key\":\"#DEST_PROJECT#\",\"select-values\":[]},{\"name\":\"subject-label\",\"description\":\"XNAT Subject Label (auto-derived from session)\",\"type\":\"string\",\"required\":true,\"replacement-key\":\"#SUBJECT_LABEL#\",\"select-values\":[]},{\"name\":\"session-label\",\"description\":\"XNAT Session Label (auto-derived from session)\",\"type\":\"string\",\"required\":true,\"replacement-key\":\"#SESSION_LABEL#\",\"select-values\":[]}],\"outputs\":[{\"name\":\"transfer-log\",\"description\":\"Per-run upload manifest CSV (success or failure).\",\"required\":false,\"mount\":\"out\"}],\"xnat\":[{\"name\":\"xnat-dnax-uploader\",\"label\":\"XNAT to DNAnexus Uploader\",\"description\":\"Uploads Radiomics CSV from a session's resource folder to a DNAnexus project.\",\"contexts\":[\"xnat:imageSessionData\"],\"external-inputs\":[{\"name\":\"session\",\"description\":\"Input session\",\"type\":\"Session\",\"required\":true,\"provides-files-for-command-mount\":\"in\",\"load-children\":false}],\"derived-inputs\":[{\"name\":\"subject\",\"type\":\"Subject\",\"required\":true,\"user-settable\":false,\"load-children\":true,\"derived-from-wrapper-input\":\"session\",\"multiple\":false},{\"name\":\"subject-label\",\"type\":\"string\",\"required\":true,\"user-settable\":false,\"provides-value-for-command-input\":\"subject-label\",\"load-children\":true,\"derived-from-wrapper-input\":\"subject\",\"derived-from-xnat-object-property\":\"label\",\"multiple\":false},{\"name\":\"session-label\",\"type\":\"string\",\"required\":true,\"user-settable\":false,\"provides-value-for-command-input\":\"session-label\",\"load-children\":true,\"derived-from-wrapper-input\":\"session\",\"derived-from-xnat-object-property\":\"label\",\"multiple\":false},{\"name\":\"project\",\"type\":\"Project\",\"required\":true,\"user-settable\":false,\"load-children\":true,\"derived-from-wrapper-input\":\"session\",\"multiple\":false}],\"output-handlers\":[{\"name\":\"transfer-log-handler\",\"accepts-command-output\":\"transfer-log\",\"as-a-child-of\":\"project\",\"type\":\"Resource\",\"label\":\"xnat-to-dnax-transfer-log\",\"tags\":[]}]}],\"reserve-memory\":512,\"limit-memory\":512,\"network\":\"host\",\"container-labels\":{},\"generic-resources\":{},\"ulimits\":{},\"secrets\":[{\"source\":{\"type\":\"system-property\",\"identifier\":\"dnax_auth_token\"},\"destination\":{\"type\":\"environment-variable\",\"identifier\":\"DX_AUTH_TOKEN\"}}]}]"
