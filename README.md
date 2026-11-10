@@ -1,4 +1,4 @@
-# xnat-to-dnax-uploader v1.0.0
+# xnat-to-dnax-uploader v1.0.1
 
 XNAT Container Service command that exports processed data (CSV) from an XNAT session to a DNAnexus project. Uses the DNAnexus **upload-agent** to push the CSV directly to the destination project, and writes a per-run manifest back to the source XNAT project for a persistent audit trail.
 
