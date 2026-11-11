@@ -1,6 +1,6 @@
 # Debian 11 is end of life and its CA bundle still trusts the compromised eMudhra roots;
-# ua reads that system bundle.
-FROM python:3.13-slim-trixie
+# ua reads that system bundle. amd64 only: the ua "linux" build is x86_64.
+FROM --platform=linux/amd64 python:3.13-slim-trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
 
