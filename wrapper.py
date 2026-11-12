@@ -42,7 +42,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-CONTAINER_VERSION = "1.0.0"
+CONTAINER_VERSION = "1.0.1"
 INPUT_ROOT = Path("/input")
 OUTPUT_ROOT = Path("/output")
 TARGET_FILENAME = "lesion_mask_radiomic_features.csv"
